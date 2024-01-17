@@ -2,7 +2,7 @@
 
 MD2MSX is a joystick adapter to connect a Mega Drive / Genesis controller to an MSX computer. It is compatible with the [JoyMega](https://frs.badcoffee.info/hardware/joymega-en.html) adapter.
 
-This is a hardware project by retro computing enthusiasts. We are not experts. **USE AT YOUR OWN RISK!**
+This is a hardware project by retro computing enthusiasts. We are not experts. **USE AT YOUR OWN RISK!** Please make sure to read the [Usage Notes](#important-usage-notes) first.
 
 ![Photo of MD2MSX externals](https://github.com/DigitalSpacemen/MD2MSX/assets/615114/9a9770d4-a4a1-464c-bad5-fd5e394e6db7)
 
@@ -37,12 +37,14 @@ For the hardware, the [KiCad](https://www.kicad.org/) design files can be found 
 
 The firmware resides in firmware/ and is compiled with [PlatformIO](https://platformio.org/).
 
-### Caveats
+### Important usage notes
 
-Some special considerations, if you're planning to build an MD2MSX:
-
-If you build it without the cable directly attached, you would either need to obtain a straight-through DB-9 to DB-9 cable, or figure out a way to plug the board directly into the MSX computer. The latter may prove to be difficult.
+Do not connect the MD2MSX to both an MSX computer and USB at the same time, even if only one of the devices is powered on!
 
 If you're planning to use a wireless receiver, the current draw may exceed the 50mA rating of the MSX joystick port. Make sure your particular MSX computer can handle this.
+
+### Some things to consider if you decide to build one
+
+If you build it without the cable directly attached, you would either need to obtain a straight-through DB-9 to DB-9 cable, or figure out a way to plug the board directly into the MSX computer. The latter may prove to be difficult.
 
 Ensure the cable going to the MSX computer has a sufficient gauge for the current needed by the Arduino and the controller, especially if you're planning to use a wireless receiver. If you do end up using a cable with thin wires, we recommend making the cable as short as possible.
