@@ -19,7 +19,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// #define DEBUG 1
+inline constexpr bool DEBUG = false;
 // #define BOARD_REV_1_1 1
 
 #endif // CONFIG_H

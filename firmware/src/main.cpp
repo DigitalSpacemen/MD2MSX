@@ -22,19 +22,17 @@
 static Controller gController;
 
 void setup() {
-#ifdef DEBUG
-	Serial.begin(9600);
-#else
-	noInterrupts();
-#endif
+	if (DEBUG)
+		Serial.begin(9600);
+	else
+		noInterrupts();
 
 	gController.init();
 }
 
 void loop() {
-#ifdef DEBUG
-	gController.debug();
-#else
-	gController.go();
-#endif
+	if (DEBUG)
+		gController.debug();
+	else
+		gController.go();
 }

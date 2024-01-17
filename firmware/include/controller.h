@@ -268,9 +268,8 @@ bool Controller::isInTimerDone() const {
 }
 
 void Controller::go() {
-#ifdef DEBUG
-	printState();
-#endif
+	if (DEBUG)
+		printState();
 
 	outputCycle<0>();
 	outputCycle<1>();
