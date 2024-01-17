@@ -18,8 +18,11 @@
 
 #include <Arduino.h>
 #include <digitalWriteFast.h>
-#include "config.h"
 #include "delay.h"
+
+#if !defined(PCB_VER_MAJOR) || !defined(PCB_VER_MINOR)
+#error "PCB version not specified"
+#endif
 
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
@@ -85,26 +88,38 @@ private:
 		1
 	};
 
-	// Maps DE-9 input pin to Arduino pin
-	static constexpr byte kInPinMap[] = {
-#ifdef BOARD_REV_1_1
-		0, 3, 5, 7, 8, 0, 4, 6, 0, 9
-#else
-		0, 2, 4, 6, 7, 0, 3, 5, 0, 8
-#endif
+	static constexpr bool pcbVersion(byte major, byte minor) {
+		return PCB_VER_MAJOR == major && PCB_VER_MINOR == minor;
 	};
 
-	// Maps DE-9 output pin to Arduino pin
-	static constexpr byte kOutPinMap[] = {
-#ifdef BOARD_REV_1_1
-		0, 19, 17, 15, 14, 0, 18, 16, 2, 0
-#else
-		0, 9, 19, 16, 14, 0, 18, 17, 15, 0
-#endif
+	// Maps controller pin to Arduino pin
+	static constexpr byte mapControllerPin(byte cPin) {
+		if (pcbVersion(1, 1)) {
+			// PCB version 1.1
+			constexpr byte pinMap[] = { 0, 3, 5, 7, 8, 0, 4, 6, 0, 9 };
+			return pinMap[cPin];
+		} else {
+			// PCB version 1.0
+			constexpr byte pinMap[] = { 0, 2, 4, 6, 7, 0, 3, 5, 0, 8 };
+			return pinMap[cPin];
+		}
+	};
+
+	// Maps MSX pin to Arduino pin
+	static constexpr byte mapMSXPin(byte mPin) {
+		if (pcbVersion(1, 1)) {
+			// PCB version 1.1
+			constexpr byte pinMap[] = { 0, 19, 17, 15, 14, 0, 18, 16, 2, 0 };
+			return pinMap[mPin];
+		} else {
+			// PCB version 1.0
+			constexpr byte pinMap[] = { 0, 9, 19, 16, 14, 0, 18, 17, 15, 0 };
+			return pinMap[mPin];
+		}
 	};
 
 	constexpr byte buttonBit(Button b) const {
-		return bit(kInPinMap[kButtonInputPin[b]] - 2);
+		return bit(mapControllerPin(kButtonInputPin[b]) - 2);
 	};
 
 	constexpr byte buttonMask() const {
@@ -129,30 +144,30 @@ Controller::Controller() :
 		_curInCycle(0) {
 	pinMode(LED_BUILTIN, OUTPUT);
 
-	pinMode(kInPinMap[1], INPUT_PULLUP);
-	pinMode(kInPinMap[2], INPUT_PULLUP);
-	pinMode(kInPinMap[3], INPUT_PULLUP);
-	pinMode(kInPinMap[4], INPUT_PULLUP);
-	pinMode(kInPinMap[6], INPUT_PULLUP);
-	pinMode(kInPinMap[9], INPUT_PULLUP);
+	pinMode(mapControllerPin(1), INPUT_PULLUP);
+	pinMode(mapControllerPin(2), INPUT_PULLUP);
+	pinMode(mapControllerPin(3), INPUT_PULLUP);
+	pinMode(mapControllerPin(4), INPUT_PULLUP);
+	pinMode(mapControllerPin(6), INPUT_PULLUP);
+	pinMode(mapControllerPin(9), INPUT_PULLUP);
 
-	pinMode(kInPinMap[7], INPUT_PULLUP);
-	pinMode(kInPinMap[7], OUTPUT);
+	pinMode(mapControllerPin(7), INPUT_PULLUP);
+	pinMode(mapControllerPin(7), OUTPUT);
 
-	pinMode(kOutPinMap[1], INPUT_PULLUP);
-	pinMode(kOutPinMap[1], OUTPUT);
-	pinMode(kOutPinMap[2], INPUT_PULLUP);
-	pinMode(kOutPinMap[2], OUTPUT);
-	pinMode(kOutPinMap[3], INPUT_PULLUP);
-	pinMode(kOutPinMap[3], OUTPUT);
-	pinMode(kOutPinMap[4], INPUT_PULLUP);
-	pinMode(kOutPinMap[4], OUTPUT);
-	pinMode(kOutPinMap[6], INPUT_PULLUP);
-	pinMode(kOutPinMap[6], OUTPUT);
-	pinMode(kOutPinMap[7], INPUT_PULLUP);
-	pinMode(kOutPinMap[7], OUTPUT);
+	pinMode(mapMSXPin(1), INPUT_PULLUP);
+	pinMode(mapMSXPin(1), OUTPUT);
+	pinMode(mapMSXPin(2), INPUT_PULLUP);
+	pinMode(mapMSXPin(2), OUTPUT);
+	pinMode(mapMSXPin(3), INPUT_PULLUP);
+	pinMode(mapMSXPin(3), OUTPUT);
+	pinMode(mapMSXPin(4), INPUT_PULLUP);
+	pinMode(mapMSXPin(4), OUTPUT);
+	pinMode(mapMSXPin(6), INPUT_PULLUP);
+	pinMode(mapMSXPin(6), OUTPUT);
+	pinMode(mapMSXPin(7), INPUT_PULLUP);
+	pinMode(mapMSXPin(7), OUTPUT);
 
-	pinMode(kOutPinMap[8], INPUT_PULLUP);
+	pinMode(mapMSXPin(8), INPUT_PULLUP);
 
 	for (byte &c : _inCycles)
 		c = UINT8_MAX;
@@ -197,26 +212,26 @@ void Controller::init() const {
 void Controller::readCycle() {
 	_inCycles[_curInCycle] = ((PINB << 8) | PIND) >> 2;
 	_curInCycle = (_curInCycle + 1) & 7;
-	digitalToggleFast(kInPinMap[7]);
+	digitalToggleFast(mapControllerPin(7));
 }
 
 template <byte CYCLENR>
 void Controller::writeCycle() const {
 	const byte cycle = _inCycles[CYCLENR];
 
-	digitalWriteFast(kOutPinMap[1], cycle & bit(kInPinMap[1] - 2));
-	digitalWriteFast(kOutPinMap[2], cycle & bit(kInPinMap[2] - 2));
-	digitalWriteFast(kOutPinMap[4], cycle & bit(kInPinMap[4] - 2));
-	digitalWriteFast(kOutPinMap[6], cycle & bit(kInPinMap[6] - 2));
-	digitalWriteFast(kOutPinMap[7], cycle & bit(kInPinMap[9] - 2));
+	digitalWriteFast(mapMSXPin(1), cycle & bit(mapControllerPin(1) - 2));
+	digitalWriteFast(mapMSXPin(2), cycle & bit(mapControllerPin(2) - 2));
+	digitalWriteFast(mapMSXPin(4), cycle & bit(mapControllerPin(4) - 2));
+	digitalWriteFast(mapMSXPin(6), cycle & bit(mapControllerPin(6) - 2));
+	digitalWriteFast(mapMSXPin(7), cycle & bit(mapControllerPin(9) - 2));
 
 	// FIXME: Put back
-	digitalWriteFast(kOutPinMap[3], cycle & bit(kInPinMap[3] - 2));
+	digitalWriteFast(mapMSXPin(3), cycle & bit(mapControllerPin(3) - 2));
 }
 
 template <byte CYCLENR>
 bool Controller::hasCycleChanged() const {
-	return (CYCLENR & 1) != digitalReadFast(kOutPinMap[8]);
+	return (CYCLENR & 1) != digitalReadFast(mapMSXPin(8));
 }
 
 template <byte CYCLENR>
@@ -268,8 +283,9 @@ bool Controller::isInTimerDone() const {
 }
 
 void Controller::go() {
-	if (DEBUG)
-		printState();
+#ifdef DEBUG
+	printState();
+#endif
 
 	outputCycle<0>();
 	outputCycle<1>();
@@ -400,7 +416,7 @@ void Controller::debug() {
 
 		for (byte c = 0; c < kCycles; ++c) {
 			_inCycles[c] = ((PINB << 8) | PIND) >> 2;
-			digitalToggleFast(kInPinMap[7]);
+			digitalToggleFast(mapControllerPin(7));
 			if (cycleDelay)
 				delay_qus(cycleDelay);
 		}
