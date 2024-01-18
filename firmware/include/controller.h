@@ -76,7 +76,11 @@ private:
 
 	// Maps controller pin to Arduino pin
 	static constexpr byte mapControllerPin(byte cPin) {
-		if (pcbVersion(1, 1)) {
+		if (pcbVersion(1, 2)) {
+			// PCB version 1.2
+			constexpr byte pinMap[] = { 0, 2, 4, 5, 6, 0, 3, 8, 0, 7 };
+			return pinMap[cPin];
+		} else if (pcbVersion(1, 1)) {
 			// PCB version 1.1
 			constexpr byte pinMap[] = { 0, 3, 5, 7, 8, 0, 4, 6, 0, 9 };
 			return pinMap[cPin];
@@ -89,7 +93,11 @@ private:
 
 	// Maps MSX pin to Arduino pin
 	static constexpr byte mapMSXPin(byte mPin) {
-		if (pcbVersion(1, 1)) {
+		if (pcbVersion(1, 2)) {
+			// PCB version 1.2
+			constexpr byte pinMap[] = { 0, 14, 16, 17, 18, 0, 15, 19, 13, 0 };
+			return pinMap[mPin];
+		} else if (pcbVersion(1, 1)) {
 			// PCB version 1.1
 			constexpr byte pinMap[] = { 0, 19, 17, 15, 14, 0, 18, 16, 2, 0 };
 			return pinMap[mPin];
@@ -210,7 +218,11 @@ void Controller::init() const {
 }
 
 void Controller::readControllerButtons() {
-	_cycles[_controllerCycle] = ((PINB << 8) | PIND) >> 2;
+	if (pcbVersion(1, 2))
+		_cycles[_controllerCycle] = PIND >> 2;
+	else
+		_cycles[_controllerCycle] = ((PINB << 8) | PIND) >> 2;
+
 	_controllerCycle = (_controllerCycle + 1) & 7;
 	digitalToggleFast(mapControllerPin(7));
 }
@@ -219,14 +231,18 @@ template <byte CYCLENR>
 void Controller::writeMSXButtons() const {
 	const byte cycle = _cycles[CYCLENR];
 
-	digitalWriteFast(mapMSXPin(1), cycle & bit(mapControllerPin(1) - 2));
-	digitalWriteFast(mapMSXPin(2), cycle & bit(mapControllerPin(2) - 2));
-	digitalWriteFast(mapMSXPin(4), cycle & bit(mapControllerPin(4) - 2));
-	digitalWriteFast(mapMSXPin(6), cycle & bit(mapControllerPin(6) - 2));
-	digitalWriteFast(mapMSXPin(7), cycle & bit(mapControllerPin(9) - 2));
+	if (pcbVersion(1, 2)) {
+		PORTC = cycle;
+	} else {
+		digitalWriteFast(mapMSXPin(1), cycle & bit(mapControllerPin(1) - 2));
+		digitalWriteFast(mapMSXPin(2), cycle & bit(mapControllerPin(2) - 2));
+		digitalWriteFast(mapMSXPin(4), cycle & bit(mapControllerPin(4) - 2));
+		digitalWriteFast(mapMSXPin(6), cycle & bit(mapControllerPin(6) - 2));
+		digitalWriteFast(mapMSXPin(7), cycle & bit(mapControllerPin(9) - 2));
 
-	// FIXME: Put back
-	digitalWriteFast(mapMSXPin(3), cycle & bit(mapControllerPin(3) - 2));
+		// FIXME: Put back
+		digitalWriteFast(mapMSXPin(3), cycle & bit(mapControllerPin(3) - 2));
+	}
 }
 
 template <byte CYCLENR>
