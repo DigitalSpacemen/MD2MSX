@@ -64,12 +64,8 @@ private:
 
 	Type getControllerType() const;
 	void printState() const;
-
-	template <Button B>
-	bool getButton() const;
-
-	template <Button B>
-	void printButton(const char *name) const;
+	bool getButton(Button button) const;
+	void printButton(Button button, const char *name) const;
 
 	static constexpr int kCycles = 8;
 
@@ -117,7 +113,7 @@ private:
 		return bit(mapControllerPin(buttonToPin[b]) - 2);
 	};
 
-	// Bitmask for all buttons
+	// Bitmask for all buttons in a cycle
 	static constexpr byte buttonMask() {
 		byte mask = 0;
 
@@ -133,8 +129,7 @@ private:
 	byte _controllerCycle;
 };
 
-template <Controller::Button B>
-bool Controller::getButton() const {
+bool Controller::getButton(Controller::Button button) const {
 	// Maps button to input read cycle
 	constexpr byte buttonCycle[Button::Count] = {
 		0, 0, 0, 0, 3, 0, 0, 3,
@@ -142,7 +137,7 @@ bool Controller::getButton() const {
 		7
 	};
 
-	return _cycles[buttonCycle[B]] & buttonBit(B);
+	return _cycles[buttonCycle[button]] & buttonBit(button);
 }
 
 Controller::Controller() :
@@ -336,9 +331,8 @@ Controller::Type Controller::getControllerType() const {
 	return ThreeButton;
 }
 
-template <Controller::Button B>
-void Controller::printButton(const char *name) const {
-	if (!getButton<B>()) {
+void Controller::printButton(Button button, const char *name) const {
+	if (!getButton(button)) {
 		Serial.print(name);
 		Serial.print(' ');
 	}
@@ -364,22 +358,22 @@ void Controller::printState() const {
 		return;
 	}
 
-	printButton<Button::Up>("Up");
-	printButton<Button::Down>("Down");
-	printButton<Button::Left>("Left");
-	printButton<Button::Right>("Right");
+	printButton(Button::Up, "Up");
+	printButton(Button::Down, "Down");
+	printButton(Button::Left, "Left");
+	printButton(Button::Right, "Right");
 
-	printButton<Button::A>("A");
-	printButton<Button::B>("B");
-	printButton<Button::C>("C");
-	printButton<Button::Start>("Start");
+	printButton(Button::A, "A");
+	printButton(Button::B, "B");
+	printButton(Button::C, "C");
+	printButton(Button::Start, "Start");
 
 	if (tp == Type::SixButton) {
-		printButton<Button::X>("X");
-		printButton<Button::Y>("Y");
-		printButton<Button::Z>("Z");
-		printButton<Button::Mode>("Mode");
-		printButton<Button::Home>("Home"); // 8BitDo-only
+		printButton(Button::X, "X");
+		printButton(Button::Y, "Y");
+		printButton(Button::Z, "Z");
+		printButton(Button::Mode, "Mode");
+		printButton(Button::Home, "Home"); // 8BitDo-only
 	}
 
 	Serial.println();
