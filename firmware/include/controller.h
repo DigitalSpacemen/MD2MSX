@@ -46,24 +46,23 @@ private:
 		Count
 	};
 
-	void resetOutTimer() const;
-	bool isOutTimerDone() const;
-	void resetInTimer() const;
-	bool isInTimerDone() const;
+	void resetMSXTimer() const;
+	bool isMSXTimerDone() const;
+	void resetControllerTimer() const;
+	bool isControllerTimerDone() const;
 
-	void readCycle();
-
-	template <byte CYCLENR>
-	inline void writeCycle() const __attribute__((always_inline));
+	void readControllerButtons();
 
 	template <byte CYCLENR>
-	inline bool hasCycleChanged() const __attribute__((always_inline));
+	inline void writeMSXButtons() const __attribute__((always_inline));
 
 	template <byte CYCLENR>
-	inline bool outputCycle() __attribute__((always_inline));
+	inline bool hasMSXCycleChanged() const __attribute__((always_inline));
+
+	template <byte CYCLENR>
+	inline bool handleMSXCycle() __attribute__((always_inline));
 
 	Type getControllerType() const;
-	Type getType() const;
 	void printState() const;
 
 	template <Button B>
@@ -74,20 +73,7 @@ private:
 
 	static constexpr int kCycles = 8;
 
-	// Maps button to input read cycle
-	static constexpr byte kButtonCycle[Button::Count] = {
-		0, 0, 0, 0, 3, 0, 0, 3,
-		6, 6, 6, 6,
-		7
-	};
-
-	// Maps button to DE-9 input pin
-	static constexpr byte kButtonInputPin[Button::Count] = {
-		1, 2, 3, 4, 6, 6, 9, 9,
-		3, 2, 1, 4,
-		1
-	};
-
+	// Shorthand for checking PCB version
 	static constexpr bool pcbVersion(byte major, byte minor) {
 		return PCB_VER_MAJOR == major && PCB_VER_MINOR == minor;
 	};
@@ -118,30 +104,49 @@ private:
 		}
 	};
 
-	constexpr byte buttonBit(Button b) const {
-		return bit(mapControllerPin(kButtonInputPin[b]) - 2);
+	// Bitmask for a single button in a cycle
+	static constexpr byte buttonBit(Button b) {
+		// Maps button to DE-9 input pin
+		constexpr byte buttonToPin[Button::Count] = {
+			1, 2, 3, 4, 6, 6, 9, 9,
+			3, 2, 1, 4,
+			1
+		};
+
+		// Pins are right-shifted two bits in _cycles
+		return bit(mapControllerPin(buttonToPin[b]) - 2);
 	};
 
-	constexpr byte buttonMask() const {
-		byte retval = 0;
+	// Bitmask for all buttons
+	static constexpr byte buttonMask() {
+		byte mask = 0;
 
 		for (byte b = 0; b < Button::Count; ++b)
-			retval |= buttonBit(static_cast<Button>(b));
+			mask |= buttonBit(static_cast<Button>(b));
 
-		return retval;
+		return mask;
 	};
 
-	byte _inCycles[kCycles];
-	byte _curInCycle;
+	// Cache for cycles read from the controller
+	byte _cycles[kCycles];
+	// Next cycle to read
+	byte _controllerCycle;
 };
 
 template <Controller::Button B>
 bool Controller::getButton() const {
-	return _inCycles[kButtonCycle[B]] & buttonBit(B);
+	// Maps button to input read cycle
+	constexpr byte buttonCycle[Button::Count] = {
+		0, 0, 0, 0, 3, 0, 0, 3,
+		6, 6, 6, 6,
+		7
+	};
+
+	return _cycles[buttonCycle[B]] & buttonBit(B);
 }
 
 Controller::Controller() :
-		_curInCycle(0) {
+		_controllerCycle(0) {
 	pinMode(LED_BUILTIN, OUTPUT);
 
 	pinMode(mapControllerPin(1), INPUT_PULLUP);
@@ -169,7 +174,7 @@ Controller::Controller() :
 
 	pinMode(mapMSXPin(8), INPUT_PULLUP);
 
-	for (byte &c : _inCycles)
+	for (byte &c : _cycles)
 		c = UINT8_MAX;
 };
 
@@ -209,15 +214,15 @@ void Controller::init() const {
 	TCCR2B = _BV(CS22) | _BV(CS21);
 }
 
-void Controller::readCycle() {
-	_inCycles[_curInCycle] = ((PINB << 8) | PIND) >> 2;
-	_curInCycle = (_curInCycle + 1) & 7;
+void Controller::readControllerButtons() {
+	_cycles[_controllerCycle] = ((PINB << 8) | PIND) >> 2;
+	_controllerCycle = (_controllerCycle + 1) & 7;
 	digitalToggleFast(mapControllerPin(7));
 }
 
 template <byte CYCLENR>
-void Controller::writeCycle() const {
-	const byte cycle = _inCycles[CYCLENR];
+void Controller::writeMSXButtons() const {
+	const byte cycle = _cycles[CYCLENR];
 
 	digitalWriteFast(mapMSXPin(1), cycle & bit(mapControllerPin(1) - 2));
 	digitalWriteFast(mapMSXPin(2), cycle & bit(mapControllerPin(2) - 2));
@@ -230,54 +235,54 @@ void Controller::writeCycle() const {
 }
 
 template <byte CYCLENR>
-bool Controller::hasCycleChanged() const {
+bool Controller::hasMSXCycleChanged() const {
 	return (CYCLENR & 1) != digitalReadFast(mapMSXPin(8));
 }
 
 template <byte CYCLENR>
-bool Controller::outputCycle() {
-	while (!hasCycleChanged<CYCLENR>()) {
-		writeCycle<CYCLENR & 7>();
+bool Controller::handleMSXCycle() {
+	while (!hasMSXCycleChanged<CYCLENR>()) {
+		writeMSXButtons<CYCLENR & 7>();
 
-		if (!_curInCycle) {
-			while (!isInTimerDone()) {
-				if (hasCycleChanged<CYCLENR>())
+		if (_controllerCycle == 0) {
+			while (!isControllerTimerDone()) {
+				if (hasMSXCycleChanged<CYCLENR>())
 					return false;
-				if (CYCLENR >= 2 && isOutTimerDone())
+				if (CYCLENR >= 2 && isMSXTimerDone())
 					return true;
 			}
-			resetInTimer();
+			resetControllerTimer();
 		}
 
-		if (hasCycleChanged<CYCLENR>())
+		if (hasMSXCycleChanged<CYCLENR>())
 			return false;
 
-		readCycle();
+		readControllerButtons();
 	}
 
 	return false;
 }
 
-void Controller::resetOutTimer() const {
+void Controller::resetMSXTimer() const {
 	// Set timer to 0
 	TCNT1 = 0;
 	// Clear compare A flag
 	TIFR1 |= bit(OCF1A);
 }
 
-bool Controller::isOutTimerDone() const {
+bool Controller::isMSXTimerDone() const {
 	// Check compare A flag
 	return TIFR1 & _BV(OCF1A);
 }
 
-void Controller::resetInTimer() const {
+void Controller::resetControllerTimer() const {
 	// Set timer to 0
 	TCNT2 = 0;
 	// Clear compare A flag
 	TIFR2 |= bit(OCF1A);
 }
 
-bool Controller::isInTimerDone() const {
+bool Controller::isControllerTimerDone() const {
 	// Check compare A flag
 	return TIFR2 & _BV(OCF2A);
 }
@@ -287,42 +292,42 @@ void Controller::go() {
 	printState();
 #endif
 
-	outputCycle<0>();
-	outputCycle<1>();
+	handleMSXCycle<0>();
+	handleMSXCycle<1>();
 
 	// Restart the timer
-	resetOutTimer();
+	resetMSXTimer();
 
-	if (outputCycle<2>())
+	if (handleMSXCycle<2>())
 		return;
 
-	if (outputCycle<3>())
+	if (handleMSXCycle<3>())
 		return;
 
-	if (outputCycle<4>())
+	if (handleMSXCycle<4>())
 		return;
 
-	if (outputCycle<5>())
+	if (handleMSXCycle<5>())
 		return;
 
-	if (outputCycle<6>())
+	if (handleMSXCycle<6>())
 		return;
 
-	if (outputCycle<7>())
+	if (handleMSXCycle<7>())
 		return;
 
 	for (;;) {
-		if (outputCycle<8>())
+		if (handleMSXCycle<8>())
 			return;
 
-		if (outputCycle<9>())
+		if (handleMSXCycle<9>())
 			return;
 	}
 }
 
-Controller::Type Controller::getType() const {
-	if ((_inCycles[7] & buttonBit(Button::Left)) && (_inCycles[7] & buttonBit(Button::Right))) {
-		if (!(_inCycles[5] & buttonBit(Button::Left)) && !(_inCycles[5] & buttonBit(Button::Right)))
+Controller::Type Controller::getControllerType() const {
+	if ((_cycles[7] & buttonBit(Button::Left)) && (_cycles[7] & buttonBit(Button::Right))) {
+		if (!(_cycles[5] & buttonBit(Button::Left)) && !(_cycles[5] & buttonBit(Button::Right)))
 			return SixButton;
 		else
 			return None;
@@ -345,10 +350,10 @@ void Controller::printState() const {
 	for (byte c = 0; c < kCycles; ++c) {
 		Serial.print(c);
 		Serial.print(": ");
-		Serial.println(_inCycles[c], BIN);
+		Serial.println(_cycles[c], BIN);
 	}
 
-	Type tp = getType();
+	Type tp = getControllerType();
 
 	if (tp == Type::ThreeButton)
 		Serial.print("3 Button Controller: ");
@@ -415,7 +420,7 @@ void Controller::debug() {
 		noInterrupts();
 
 		for (byte c = 0; c < kCycles; ++c) {
-			_inCycles[c] = ((PINB << 8) | PIND) >> 2;
+			_cycles[c] = ((PINB << 8) | PIND) >> 2;
 			digitalToggleFast(mapControllerPin(7));
 			if (cycleDelay)
 				delay_qus(cycleDelay);
@@ -423,18 +428,18 @@ void Controller::debug() {
 
 		interrupts();
 
-		for (byte &c : _inCycles)
+		for (byte &c : _cycles)
 			c |= ~buttonMask();
 
 	for (byte c = 0; c < kCycles; ++c) {
-			if (oldCycles[c] != _inCycles[c]) {
+			if (oldCycles[c] != _cycles[c]) {
 				printState();
 				break;
 			}
 		}
 
 		for (byte c = 0; c < kCycles; ++c)
-			oldCycles[c] = _inCycles[c];
+			oldCycles[c] = _cycles[c];
 	}
 }
 
