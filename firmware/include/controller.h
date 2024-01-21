@@ -150,32 +150,32 @@ bool Controller::getButton(Controller::Button button) const {
 
 Controller::Controller() :
 		_controllerCycle(0) {
-	pinMode(LED_BUILTIN, OUTPUT);
+	pinModeFast(LED_BUILTIN, OUTPUT);
 
-	pinMode(mapControllerPin(1), INPUT_PULLUP);
-	pinMode(mapControllerPin(2), INPUT_PULLUP);
-	pinMode(mapControllerPin(3), INPUT_PULLUP);
-	pinMode(mapControllerPin(4), INPUT_PULLUP);
-	pinMode(mapControllerPin(6), INPUT_PULLUP);
-	pinMode(mapControllerPin(9), INPUT_PULLUP);
+	pinModeFast(mapControllerPin(1), INPUT_PULLUP);
+	pinModeFast(mapControllerPin(2), INPUT_PULLUP);
+	pinModeFast(mapControllerPin(3), INPUT_PULLUP);
+	pinModeFast(mapControllerPin(4), INPUT_PULLUP);
+	pinModeFast(mapControllerPin(6), INPUT_PULLUP);
+	pinModeFast(mapControllerPin(9), INPUT_PULLUP);
 
-	pinMode(mapControllerPin(7), INPUT_PULLUP);
-	pinMode(mapControllerPin(7), OUTPUT);
+	pinModeFast(mapControllerPin(7), INPUT_PULLUP);
+	pinModeFast(mapControllerPin(7), OUTPUT);
 
-	pinMode(mapMSXPin(1), INPUT_PULLUP);
-	pinMode(mapMSXPin(1), OUTPUT);
-	pinMode(mapMSXPin(2), INPUT_PULLUP);
-	pinMode(mapMSXPin(2), OUTPUT);
-	pinMode(mapMSXPin(3), INPUT_PULLUP);
-	pinMode(mapMSXPin(3), OUTPUT);
-	pinMode(mapMSXPin(4), INPUT_PULLUP);
-	pinMode(mapMSXPin(4), OUTPUT);
-	pinMode(mapMSXPin(6), INPUT_PULLUP);
-	pinMode(mapMSXPin(6), OUTPUT);
-	pinMode(mapMSXPin(7), INPUT_PULLUP);
-	pinMode(mapMSXPin(7), OUTPUT);
+	pinModeFast(mapMSXPin(1), INPUT_PULLUP);
+	pinModeFast(mapMSXPin(1), OUTPUT);
+	pinModeFast(mapMSXPin(2), INPUT_PULLUP);
+	pinModeFast(mapMSXPin(2), OUTPUT);
+	pinModeFast(mapMSXPin(3), INPUT_PULLUP);
+	pinModeFast(mapMSXPin(3), OUTPUT);
+	pinModeFast(mapMSXPin(4), INPUT_PULLUP);
+	pinModeFast(mapMSXPin(4), OUTPUT);
+	pinModeFast(mapMSXPin(6), INPUT_PULLUP);
+	pinModeFast(mapMSXPin(6), OUTPUT);
+	pinModeFast(mapMSXPin(7), INPUT_PULLUP);
+	pinModeFast(mapMSXPin(7), OUTPUT);
 
-	pinMode(mapMSXPin(8), INPUT_PULLUP);
+	pinModeFast(mapMSXPin(8), INPUT_PULLUP);
 
 	for (byte &c : _cycles)
 		c = UINT8_MAX;
