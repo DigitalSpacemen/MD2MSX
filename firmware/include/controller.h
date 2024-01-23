@@ -50,18 +50,13 @@ private:
 	bool isMSXTimerDone() const;
 	void resetControllerTimer() const;
 	bool isControllerTimerDone() const;
-
 	void readControllerButtons();
+	void writeMSXButtons(uint8_t cycleNr) const;
+	bool hasMSXCycleChanged(uint8_t cycleNr) const;
+	// This "inline" is essential for speeding up the code
+	inline bool handleMSXCycle(uint8_t cycleNr);
 
-	template <uint8_t CYCLENR>
-	inline void writeMSXButtons() const __attribute__((always_inline));
-
-	template <uint8_t CYCLENR>
-	inline bool hasMSXCycleChanged() const __attribute__((always_inline));
-
-	template <uint8_t CYCLENR>
-	inline bool handleMSXCycle() __attribute__((always_inline));
-
+	// Debug functions
 	Type getControllerType() const;
 	void printState() const;
 	bool getButton(Button button) const;
@@ -229,9 +224,8 @@ void Controller::readControllerButtons() {
 	pinToggle(mapControllerPin(7));
 }
 
-template <uint8_t CYCLENR>
-void Controller::writeMSXButtons() const {
-	const uint8_t cycle = _cycles[CYCLENR];
+void Controller::writeMSXButtons(uint8_t cycleNr) const {
+	const uint8_t cycle = _cycles[cycleNr];
 
 	if (pcbVersion(1, 2)) {
 		PORTC = cycle;
@@ -245,27 +239,25 @@ void Controller::writeMSXButtons() const {
 	}
 }
 
-template <uint8_t CYCLENR>
-bool Controller::hasMSXCycleChanged() const {
-	return (CYCLENR & 1) != pinRead(mapMSXPin(8));
+bool Controller::hasMSXCycleChanged(uint8_t cycleNr) const {
+	return (cycleNr & 1) != pinRead(mapMSXPin(8));
 }
 
-template <uint8_t CYCLENR>
-bool Controller::handleMSXCycle() {
-	while (!hasMSXCycleChanged<CYCLENR>()) {
-		writeMSXButtons<CYCLENR & 7>();
+bool Controller::handleMSXCycle(uint8_t cycleNr) {
+	while (!hasMSXCycleChanged(cycleNr)) {
+		writeMSXButtons(cycleNr & 7);
 
 		if (_controllerCycle == 0) {
 			while (!isControllerTimerDone()) {
-				if (hasMSXCycleChanged<CYCLENR>())
+				if (hasMSXCycleChanged(cycleNr))
 					return false;
-				if (CYCLENR >= 2 && isMSXTimerDone())
+				if (cycleNr >= 2 && isMSXTimerDone())
 					return true;
 			}
 			resetControllerTimer();
 		}
 
-		if (hasMSXCycleChanged<CYCLENR>())
+		if (hasMSXCycleChanged(cycleNr))
 			return false;
 
 		readControllerButtons();
@@ -303,35 +295,35 @@ void Controller::go() {
 	printState();
 #endif
 
-	handleMSXCycle<0>();
-	handleMSXCycle<1>();
+	handleMSXCycle(0);
+	handleMSXCycle(1);
 
 	// Restart the timer
 	resetMSXTimer();
 
-	if (handleMSXCycle<2>())
+	if (handleMSXCycle(2))
 		return;
 
-	if (handleMSXCycle<3>())
+	if (handleMSXCycle(3))
 		return;
 
-	if (handleMSXCycle<4>())
+	if (handleMSXCycle(4))
 		return;
 
-	if (handleMSXCycle<5>())
+	if (handleMSXCycle(5))
 		return;
 
-	if (handleMSXCycle<6>())
+	if (handleMSXCycle(6))
 		return;
 
-	if (handleMSXCycle<7>())
+	if (handleMSXCycle(7))
 		return;
 
 	for (;;) {
-		if (handleMSXCycle<8>())
+		if (handleMSXCycle(8))
 			return;
 
-		if (handleMSXCycle<9>())
+		if (handleMSXCycle(9))
 			return;
 	}
 }
