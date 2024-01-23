@@ -216,6 +216,7 @@ void Controller::init() const {
 
 void Controller::readControllerButtons() {
 	if (pcbVersion(1, 2))
+		// PIND / 4 generates faster code here, if we need it
 		_cycles[_controllerCycle] = PIND >> 2;
 	else
 		_cycles[_controllerCycle] = ((PINB << 8) | PIND) >> 2;
@@ -245,6 +246,12 @@ bool Controller::hasMSXCycleChanged(uint8_t cycleNr) const {
 
 bool Controller::handleMSXCycle(uint8_t cycleNr) {
 	while (!hasMSXCycleChanged(cycleNr)) {
+		// writeMSXButtons() currently also functions as the delay for
+		// readControllerButtons(). For PCB 1.2 the code is close to the
+		// speed of the 8BitDo receiver. If the code ever becomes faster,
+		// an additional delay mechanism will need to be added in order
+		// to maintain 8BitDo compatibility. 8BitDo breaks at around a 1.5us
+		// delay between toggles.
 		writeMSXButtons(cycleNr & 7);
 
 		if (_controllerCycle == 0) {
