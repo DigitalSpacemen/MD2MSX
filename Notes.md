@@ -2,7 +2,9 @@
 
 These are some quick notes on various controllers I tested.
 
-Note: cycle numbers in this document are 0-based.
+- Cycle numbers in this document are 0-based.
+- Reponse time: the time it takes the controller to update the output pins after the select pin is toggled.
+- Reset time: the time the controller remains in cycle 2+ before falling back to cycle 0 or 1.
 
 ### SEGA Arcade Power Stick II
 
@@ -33,7 +35,7 @@ Reset time: ~0.1ms
 
 ### 8BitDo Bluetooth Receiver
 
-Reponse time: ~490ns
+Reponse time: ~490ns, but only properly handles select toggles that are at least ~1.4us apart
 
 Reset time: ~1.6ms
 
@@ -43,3 +45,4 @@ Deviations:
 - After a reset with the select pin low (i.e. cycle 1 is entered), a select toggle will then make it enter cycle 0 instead of cycle 2.
 - Buttons are latched on select toggle and are not updated otherwise.
 - One additional button: Home (in cycle 7)
+
