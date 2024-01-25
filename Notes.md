@@ -35,7 +35,7 @@ Reset time: ~0.1ms
 
 ### 8BitDo Bluetooth Receiver
 
-Reponse time: ~490ns, but only properly handles select toggles that are at least ~1.4us apart
+Reponse time: ~490ns, but only properly handles select toggles that are at least ~1.4µs apart
 
 Reset time: ~1.6ms
 
