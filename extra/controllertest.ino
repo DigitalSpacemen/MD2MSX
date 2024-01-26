@@ -1,10 +1,11 @@
-// This toggles a pin to test controllers or the MD2MSX
+// Arduino program that toggles a pin to test controllers or the MD2MSX
 
 // Connect 5V, GND and one Arduino pin to the controller
 // Connect one controller output pin to an oscilloscope
 // Optional: if the oscilloscope is dual-channel, connect
-// the Select pin to the second channel
+// the Select pin as well
 
+// Requires digitalWriteFast
 #include <digitalWriteFast.h>
 
 // Which Arduino pin to use for Select
