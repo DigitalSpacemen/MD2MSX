@@ -14,7 +14,7 @@ The JoyMega works great with official controllers. However, many 3rd-party contr
 - RetroBit wired controllers and receivers not working in 6-button mode.
 - Unbranded 3rd party controller switching to a permanent 3-button mode when the Mode button is pressed in-game.
 
-These issues are not caused by the JoyMega adapter; they're a result of incompatibilities between MSX software and the controllers. Please check our [Controller Notes](Controller Notes.md) for more detailed information.
+These issues are not caused by the JoyMega adapter; they're a result of incompatibilities between MSX software and the controllers. Please check our [Controller Notes](Controller%20Notes.md) for more detailed information.
 
 ### How does MD2MSX work?
 
