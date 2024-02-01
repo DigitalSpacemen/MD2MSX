@@ -71,8 +71,8 @@ private:
 
 	// Maps controller pin to Arduino pin
 	static constexpr uint8_t mapControllerPin(uint8_t cPin) {
-		if (pcbVersion(1, 2)) {
-			// PCB version 1.2
+		if (pcbVersion(1, 3) || pcbVersion(1, 2)) {
+			// PCB version 1.3 / 1.2
 			constexpr uint8_t pinMap[] = { 0, 2, 4, 5, 6, 0, 3, 8, 0, 7 };
 			return pinMap[cPin];
 		} else if (pcbVersion(1, 1)) {
@@ -88,7 +88,11 @@ private:
 
 	// Maps MSX pin to Arduino pin
 	static constexpr uint8_t mapMSXPin(uint8_t mPin) {
-		if (pcbVersion(1, 2)) {
+		if (pcbVersion(1, 3)) {
+			// PCB version 1.3
+			constexpr uint8_t pinMap[] = { 0, 14, 16, 17, 18, 0, 15, 19, 9, 0 };
+			return pinMap[mPin];
+		} else if (pcbVersion(1, 2)) {
 			// PCB version 1.2
 			constexpr uint8_t pinMap[] = { 0, 14, 16, 17, 18, 0, 15, 19, 13, 0 };
 			return pinMap[mPin];
