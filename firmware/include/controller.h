@@ -71,40 +71,16 @@ private:
 
 	// Maps controller pin to Arduino pin
 	static constexpr uint8_t mapControllerPin(uint8_t cPin) {
-		if (pcbVersion(1, 3) || pcbVersion(1, 2)) {
-			// PCB version 1.3 / 1.2
-			constexpr uint8_t pinMap[] = { 0, 2, 4, 5, 6, 0, 3, 8, 0, 7 };
-			return pinMap[cPin];
-		} else if (pcbVersion(1, 1)) {
-			// PCB version 1.1
-			constexpr uint8_t pinMap[] = { 0, 3, 5, 7, 8, 0, 4, 6, 0, 9 };
-			return pinMap[cPin];
-		} else {
-			// PCB version 1.0
-			constexpr uint8_t pinMap[] = { 0, 2, 4, 6, 7, 0, 3, 5, 0, 8 };
-			return pinMap[cPin];
-		}
+		// PCB version 1.3
+		constexpr uint8_t pinMap[] = { 0, 2, 4, 5, 6, 0, 3, 8, 0, 7 };
+		return pinMap[cPin];
 	};
 
 	// Maps MSX pin to Arduino pin
 	static constexpr uint8_t mapMSXPin(uint8_t mPin) {
-		if (pcbVersion(1, 3)) {
-			// PCB version 1.3
-			constexpr uint8_t pinMap[] = { 0, 14, 16, 17, 18, 0, 15, 19, 9, 0 };
-			return pinMap[mPin];
-		} else if (pcbVersion(1, 2)) {
-			// PCB version 1.2
-			constexpr uint8_t pinMap[] = { 0, 14, 16, 17, 18, 0, 15, 19, 13, 0 };
-			return pinMap[mPin];
-		} else if (pcbVersion(1, 1)) {
-			// PCB version 1.1
-			constexpr uint8_t pinMap[] = { 0, 19, 17, 15, 14, 0, 18, 16, 2, 0 };
-			return pinMap[mPin];
-		} else {
-			// PCB version 1.0
-			constexpr uint8_t pinMap[] = { 0, 9, 19, 16, 14, 0, 18, 17, 15, 0 };
-			return pinMap[mPin];
-		}
+		// PCB version 1.3
+		constexpr uint8_t pinMap[] = { 0, 14, 16, 17, 18, 0, 15, 19, 9, 0 };
+		return pinMap[mPin];
 	};
 
 	// Bitmask for a single button in a cycle
@@ -219,29 +195,14 @@ void Controller::init() const {
 }
 
 void Controller::readControllerButtons() {
-	if (pcbVersion(1, 2))
-		// PIND / 4 generates faster code here, if we need it
-		_cycles[_controllerCycle] = PIND >> 2;
-	else
-		_cycles[_controllerCycle] = ((PINB << 8) | PIND) >> 2;
-
+	// PIND / 4 generates faster code here, if we need it
+	_cycles[_controllerCycle] = PIND >> 2;
 	_controllerCycle = (_controllerCycle + 1) & 7;
 	pinToggle(mapControllerPin(7));
 }
 
 void Controller::writeMSXButtons(uint8_t cycleNr) const {
-	const uint8_t cycle = _cycles[cycleNr];
-
-	if (pcbVersion(1, 2)) {
-		PORTC = cycle;
-	} else {
-		pinWrite(mapMSXPin(1), (cycle & bit(mapControllerPin(1) - 2)));
-		pinWrite(mapMSXPin(2), (cycle & bit(mapControllerPin(2) - 2)));
-		pinWrite(mapMSXPin(3), (cycle & bit(mapControllerPin(3) - 2)));
-		pinWrite(mapMSXPin(4), (cycle & bit(mapControllerPin(4) - 2)));
-		pinWrite(mapMSXPin(6), (cycle & bit(mapControllerPin(6) - 2)));
-		pinWrite(mapMSXPin(7), (cycle & bit(mapControllerPin(9) - 2)));
-	}
+	PORTC = _cycles[cycleNr];
 }
 
 bool Controller::hasMSXCycleChanged(uint8_t cycleNr) const {
