@@ -20,8 +20,8 @@ Please check our [Controller Notes](Controller%20Notes.md) for more detailed inf
 
 Our proposed solution places an Arduino inbetween the controller and the MSX. This Arduino robustly reads the controller on the input side. On the output side, it implements the controller protocol more accurately than the 3rd-party controllers. We designed a simple PCB for this purpose with two DB-9 (or DE-9) ports and header pins to plug in an Arduino Nano. MD2MSX also implements the JoyMega pin mapping and select signal inversion. MD2MSX should be connected to the MSX directly; do not connect it to the JoyMega.
 
-![Photo of MD2MSX internals](https://github.com/DigitalSpacemen/MD2MSX/assets/615114/11f8d075-2c05-4a96-969a-653f34b694bf)
-*Revision 1.0 of the MD2MSX with a cable soldered directly to the board in place of the 2nd DB-9 port.*
+![Photo of MD2MSX internals](https://github.com/DigitalSpacemen/MD2MSX/assets/615114/85c7ad99-41dc-403c-ab0e-c01023ade3e5)
+*MD2MSX with a cable soldered directly to the board in place of the 2nd DB-9 port.*
 
 ### How do I make one?
 
