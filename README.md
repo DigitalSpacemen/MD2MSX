@@ -1,6 +1,6 @@
 ## About MD2MSX
 
-MD2MSX is a joystick adapter to connect a Mega Drive / Genesis controller to an MSX computer. It is compatible with the [JoyMega](https://frs.badcoffee.info/hardware/joymega-en.html) adapter.
+MD2MSX is a joystick adapter to connect a Mega Drive / Genesis controller to an MSX computer. Software that works with the [JoyMega](https://frs.badcoffee.info/hardware/joymega-en.html) adapter should also work with the MD2MSX.
 
 This is a hardware project by retro computing enthusiasts. We are not experts. **USE AT YOUR OWN RISK!** Please make sure to read the [Usage Notes](#important-usage-notes) first.
 
@@ -8,17 +8,17 @@ This is a hardware project by retro computing enthusiasts. We are not experts. *
 
 ### Why another joystick adapter?
 
-The JoyMega works great with official controllers. However, many 3rd-party controllers deviate quite a bit from the original protocol in various ways. Here's some examples of possible issues:
+The JoyMega works great with official controllers. However, many 3rd-party controllers don't implement the controller protocol very accurately. Here's some examples of possible issues:
 
 - 8BitDo wireless receivers working in 3-/6-button mode, but not working as a plain MSX joystick.
-- RetroBit wired controllers and receivers not working in 6-button mode.
+- Retro-Bit wired controllers and receivers not working in 6-button mode.
 - Unbranded 3rd party controller switching to a permanent 3-button mode when the Mode button is pressed in-game.
 
-These issues are not caused by the JoyMega adapter; they're a result of incompatibilities between MSX software and the controllers. Please check our [Controller Notes](Controller%20Notes.md) for more detailed information.
+Please check our [Controller Notes](Controller%20Notes.md) for more detailed information.
 
 ### How does MD2MSX work?
 
-Our proposed solution places an Arduino inbetween the controller and the MSX. This Arduino robustly reads the controller on the input side. On the output side, it implements the controller protocol more accurately than the 3rd-party controllers. We designed a simple PCB for this purpose with two DB-9 (or DE-9) ports and header pins to plug in an Arduino Nano.
+Our proposed solution places an Arduino inbetween the controller and the MSX. This Arduino robustly reads the controller on the input side. On the output side, it implements the controller protocol more accurately than the 3rd-party controllers. We designed a simple PCB for this purpose with two DB-9 (or DE-9) ports and header pins to plug in an Arduino Nano. MD2MSX also implements the JoyMega pin mapping and select signal inversion. MD2MSX should be connected to the MSX directly; do not connect it to the JoyMega.
 
 ![Photo of MD2MSX internals](https://github.com/DigitalSpacemen/MD2MSX/assets/615114/11f8d075-2c05-4a96-969a-653f34b694bf)
 *Revision 1.0 of the MD2MSX with a cable soldered directly to the board in place of the 2nd DB-9 port.*
