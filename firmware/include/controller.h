@@ -20,10 +20,6 @@
 #include "delay.h"
 #include "pin.h"
 
-#if !defined(PCB_VER_MAJOR) || !defined(PCB_VER_MINOR)
-#error "PCB version not specified"
-#endif
-
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
@@ -63,11 +59,6 @@ private:
 	void printButton(Button button, const char *name) const;
 
 	static constexpr int kCycles = 8;
-
-	// Shorthand for checking PCB version
-	static constexpr bool pcbVersion(uint8_t major, uint8_t minor) {
-		return PCB_VER_MAJOR == major && PCB_VER_MINOR == minor;
-	};
 
 	// Maps controller pin to Arduino pin
 	static constexpr uint8_t mapControllerPin(uint8_t cPin) {
